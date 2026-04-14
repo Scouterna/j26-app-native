@@ -1,0 +1,29 @@
+# Source / PWA web app (not part of native apps)
+src/
+
+# macOS
+.DS_Store
+
+# Secrets / API keys
+**/GoogleService-Info.plist
+**/google-services.json
+
+# iOS
+ios/Pods/
+ios/J26.xcworkspace/xcuserdata/
+ios/J26.xcodeproj/xcuserdata/
+ios/*.app
+
+# Android
+android/build/
+android/app/build/
+android/.gradle/
+android/local.properties
+android/signingKey.keystore
+android/app-release-signed.apk
+android/app-release-signed.apk.idsig
+
+# IDE
+*.xcuserstate
+*.xcuserdatad/
+.idea/
