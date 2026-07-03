@@ -99,7 +99,9 @@
 	<key>WKAppBoundDomains</key>
 	<array>
 		<string>app.dev.j26.se</string>
-<string>dev.id.scouterna.se</string>
+		<string>app.jamboree.se</string>
+		<string>id.dev.j26.se</string>
+		<string>j26.scoutid.se</string>
 	</array>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>

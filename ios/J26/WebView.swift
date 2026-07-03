@@ -11,65 +11,7 @@ func createWebView(container: UIView, WKSMH: WKScriptMessageHandler, WKND: WKNav
 
     userContentController.add(WKSMH, name: "print")
     userContentController.add(WKSMH, name: "push-subscribe")
-    userContentController.add(WKSMH, name: "push-permission-request")
-    userContentController.add(WKSMH, name: "push-permission-state")
     userContentController.add(WKSMH, name: "push-token")
-
-    // Polyfill APIs missing in WKWebView: navigator.permissions.query and Notification
-    let webViewPolyfills = """
-    (function() {
-        // 1. Polyfill navigator.permissions.query for geolocation
-        if (!navigator.permissions || !navigator.permissions.query) {
-            navigator.permissions = { query: function(desc) {
-                if (desc && desc.name === 'geolocation') {
-                    return Promise.resolve({ state: 'prompt' });
-                }
-                if (desc && desc.name === 'notifications') {
-                    return Promise.resolve({ state: window._notificationPermission || 'default' });
-                }
-                return Promise.resolve({ state: 'prompt' });
-            }};
-        } else {
-            var originalQuery = navigator.permissions.query.bind(navigator.permissions);
-            navigator.permissions.query = function(desc) {
-                if (desc && desc.name === 'geolocation') {
-                    return Promise.resolve({ state: 'prompt' });
-                }
-                if (desc && desc.name === 'notifications') {
-                    return Promise.resolve({ state: window._notificationPermission || 'default' });
-                }
-                return originalQuery(desc);
-            };
-        }
-
-        // 2. Polyfill Notification API so the web app sees it as available
-        if (!('Notification' in window)) {
-            window._notificationPermission = 'default';
-            window.Notification = function(title, options) {
-                this.title = title;
-                this.options = options;
-            };
-            window.Notification.permission = 'default';
-            window.Notification.requestPermission = function(callback) {
-                return new Promise(function(resolve) {
-                    // Use the native iOS push permission via the bridge
-                    window.webkit.messageHandlers['push-permission-request'].postMessage('');
-                    // Listen for the result from native
-                    window.addEventListener('push-permission-request', function handler(e) {
-                        window.removeEventListener('push-permission-request', handler);
-                        var result = (e.detail === 'granted') ? 'granted' : 'denied';
-                        window.Notification.permission = result;
-                        window._notificationPermission = result;
-                        if (callback) callback(result);
-                        resolve(result);
-                    });
-                });
-            };
-        }
-    })();
-    """
-    let polyfillScript = WKUserScript(source: webViewPolyfills, injectionTime: .atDocumentStart, forMainFrameOnly: false)
-    userContentController.addUserScript(polyfillScript)
 
     config.userContentController = userContentController
 

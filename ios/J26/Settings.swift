@@ -12,11 +12,11 @@ let rootUrl = URL(string: "https://app.dev.j26.se")!
 
 // allowed origin is for what we are sticking to pwa domain
 // This should also appear in Info.plist
-let allowedOrigins: [String] = ["app.dev.j26.se"]
+let allowedOrigins: [String] = ["app.dev.j26.se", "app.jamboree.se"]
 
 // auth origins will open in modal and show toolbar for back into the main origin.
 // These should also appear in Info.plist
-let authOrigins: [String] = ["dev.id.scouterna.se"]
+let authOrigins: [String] = ["id.dev.j26.se", "j26.scoutid.se"]
 // allowedOrigins + authOrigins <= 10
 
 let platformCookie = Cookie(name: "app-platform", value: "iOS App Store")
