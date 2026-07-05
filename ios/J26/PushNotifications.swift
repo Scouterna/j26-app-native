@@ -64,74 +64,6 @@ func parseSubscribeMessage(message: WKScriptMessage) -> [SubscribeMessage] {
     return subscribeMessages
 }
 
-func returnPermissionResult(isGranted: Bool){
-    DispatchQueue.main.async(execute: {
-        if (isGranted){
-            J26.webView.evaluateJavaScript("this.dispatchEvent(new CustomEvent('push-permission-request', { detail: 'granted' }))")
-        }
-        else {
-            J26.webView.evaluateJavaScript("this.dispatchEvent(new CustomEvent('push-permission-request', { detail: 'denied' }))")
-        }
-    })
-}
-func returnPermissionState(state: String){
-    DispatchQueue.main.async(execute: {
-        J26.webView.evaluateJavaScript("this.dispatchEvent(new CustomEvent('push-permission-state', { detail: '\(state)' }))")
-    })
-}
-
-func handlePushPermission() {
-    UNUserNotificationCenter.current().getNotificationSettings () { settings in
-            switch settings.authorizationStatus {
-            case .notDetermined:
-                let authOptions: UNAuthorizationOptions = [.alert, .badge, .sound]
-                UNUserNotificationCenter.current().requestAuthorization(
-                    options: authOptions,
-                    completionHandler: { (success, error) in
-                        if error == nil {
-                            if success == true {
-                                returnPermissionResult(isGranted: true)
-                                DispatchQueue.main.async {
-                                  UIApplication.shared.registerForRemoteNotifications()
-                                }
-                            }
-                            else {
-                                returnPermissionResult(isGranted: false)
-                            }
-                        }
-                        else {
-                            returnPermissionResult(isGranted: false)
-                        }
-                    }
-                )
-            case .denied:
-                returnPermissionResult(isGranted: false)
-            case .authorized, .ephemeral, .provisional:
-                returnPermissionResult(isGranted: true)
-            @unknown default:
-                return;
-            }
-        }
-}
-func handlePushState() {
-    UNUserNotificationCenter.current().getNotificationSettings () { settings in
-        switch settings.authorizationStatus {
-        case .notDetermined:
-            returnPermissionState(state: "notDetermined")
-        case .denied:
-            returnPermissionState(state: "denied")
-        case .authorized:
-            returnPermissionState(state: "authorized")
-        case .ephemeral:
-            returnPermissionState(state: "ephemeral")
-        case .provisional:
-            returnPermissionState(state: "provisional")
-        @unknown default:
-            returnPermissionState(state: "unknown")
-            return;
-        }
-    }
-}
 
 func checkViewAndEvaluate(event: String, detail: String) {
     if (!J26.webView.isHidden && !J26.webView.isLoading ) {
@@ -173,13 +105,38 @@ func sendPushToWebView(userInfo: [AnyHashable: Any]){
 }
 
 func sendPushClickToWebView(userInfo: [AnyHashable: Any]){
-    var json = "";
-    do {
-        let jsonData = try JSONSerialization.data(withJSONObject: userInfo)
-        json = String(data: jsonData, encoding: .utf8)!
-    } catch {
-        print("ERROR: userInfo parsing problem")
-        return
+    navigateToNotificationLink(userInfo: userInfo)
+}
+
+func navigateToNotificationLink(userInfo: [AnyHashable: Any]) {
+    guard let payloadStr = userInfo["payload"] as? String,
+          let payloadData = payloadStr.data(using: .utf8),
+          let payload = try? JSONSerialization.jsonObject(with: payloadData) as? [String: Any],
+          let link = payload["link"] as? String else { return }
+
+    let path: String
+    if link.hasPrefix("http://") || link.hasPrefix("https://") {
+        guard let parsed = URL(string: link) else { return }
+        path = parsed.path
+    } else {
+        path = link
     }
-    checkViewAndEvaluate(event: "push-notification-click", detail: json)
+
+    var components = URLComponents(url: rootUrl, resolvingAgainstBaseURL: false)!
+    components.path = path
+    guard let targetUrl = components.url else { return }
+
+    navigateWhenReady(url: targetUrl)
+}
+
+func navigateWhenReady(url: URL) {
+    DispatchQueue.main.async {
+        if !J26.webView.isLoading {
+            J26.webView.load(URLRequest(url: url))
+        } else {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                navigateWhenReady(url: url)
+            }
+        }
+    }
 }

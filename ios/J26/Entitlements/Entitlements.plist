@@ -8,6 +8,8 @@
 	<array>
 		<string>applinks:app.dev.j26.se</string>
 		<string>webcredentials:app.dev.j26.se</string>
+		<string>applinks:app.jamboree.se</string>
+		<string>webcredentials:app.jamboree.se</string>
 	</array>
 	<key>com.apple.security.app-sandbox</key>
 	<true/>
