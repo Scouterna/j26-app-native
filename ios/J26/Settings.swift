@@ -8,7 +8,7 @@ struct Cookie {
 let gcmMessageIDKey = "gcm.message_id"
 
 // URL for first launch
-let rootUrl = URL(string: "https://app.dev.j26.se")!
+let rootUrl = URL(string: "https://app.jamboree.se")!
 
 // allowed origin is for what we are sticking to pwa domain
 // This should also appear in Info.plist
