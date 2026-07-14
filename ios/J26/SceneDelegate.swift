@@ -97,7 +97,11 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     func sceneWillEnterForeground(_ scene: UIScene) {
         // Called as the scene transitions from the background to the foreground.
-        // Use this method to undo the changes made on entering the background.
+        // Notify the web app it's back in the foreground so it can re-check for a
+        // new service-worker version. The WebView keeps the page alive across
+        // resume and never reloads, so without this the PWA never notices a
+        // deployed update on reopen. The web app listens for "app-foregrounded".
+        J26.webView?.evaluateJavaScript("window.dispatchEvent(new Event('app-foregrounded'))")
     }
 
     func sceneDidEnterBackground(_ scene: UIScene) {
